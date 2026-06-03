@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LayoutFix - Smart Keyboard Converter</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css" crossorigin="anonymous" />
+
+<style>
+:root {
+    --bg: #070b14;
+    --card-bg: rgba(17, 24, 39, 0.6);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --input-bg: rgba(255, 255, 255, 0.03);
+    --input-border: rgba(255, 255, 255, 0.05);
+    --text: #ffffff;
+    --muted: #94a3b8;
+    --accent: #6366f1;
+    --accent-hover: #4f46e5;
+    --danger: #ef4444;
+    --gradient: linear-gradient(135deg, #4f46e5, #ec4899);
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; position: relative; }
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+/* Фон */
+.bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; }
+.ball { position: absolute; border-radius: 50%; filter: blur(140px); opacity: 0.5; animation: float 20s infinite alternate ease-in-out; }
+.ball:nth-child(1) { width: 400px; height: 400px; background: #4f46e5; top: -10%; left: -10%; }
+.ball:nth-child(2) { width: 500px; height: 500px; background: #ec4899; right: -15%; top: 20%; animation-delay: -5s; }
+.ball:nth-child(3) { width: 450px; height: 450px; background: #06b6d4; bottom: -20%; left: 20%; animation-delay: -10s; }
+
+@keyframes float {
+    0% { transform: translate(0, 0) scale(1); }
+    100% { transform: translate(50px, 50px) scale(1.1); }
+}
+
+.container { max-width: 1200px; margin: auto; padding: 30px 20px; display: flex; flex-direction: column; gap: 30px; }
+
+/* Верхняя панель */
+.top-bar { display: flex; justify-content: flex-end; align-items: center; gap: 15px; }
+
+.lang-switch { display: flex; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 12px; padding: 4px; backdrop-filter: blur(10px); }
+.lang-btn { background: transparent; color: var(--muted); border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px; transition: 0.3s; }
+.lang-btn.active { background: rgba(255, 255, 255, 0.1); color: var(--text); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+.icon-btn { display: flex; align-items: center; justify-content: center; width: 40px; height: 40px; background: var(--input-bg); border: 1px solid var(--input-border); border-radius: 12px; color: var(--text); cursor: pointer; transition: 0.3s; backdrop-filter: blur(10px); }
+.icon-btn:hover { background: rgba(255, 255, 255, 0.1); }
+
+/* Шапка */
+.header { text-align: center; }
+.logo { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 10px; }
+.logo svg { width: 48px; height: 48px; filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5)); }
+.logo h1 { font-size: 42px; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
+.subtitle { color: var(--muted); font-size: 16px; }
+
+/* Основная карточка */
+.card { backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px); background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 30px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+
+/* Сетка ввода */
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+.input-wrapper { position: relative; }
+
+textarea { width: 100%; height: 220px; resize: none; border: 1px solid var(--input-border); outline: none; border-radius: 16px; padding: 20px; font-size: 16px; line-height: 1.5; background: var(--input-bg); color: var(--text); transition: 0.3s; }
+textarea:focus { border-color: var(--accent); background: rgba(255, 255, 255, 0.05); box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1); }
+textarea.error { border-color: var(--danger); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1); }
+
+.info { position: absolute; bottom: 15px; right: 20px; color: var(--muted); font-size: 13px; background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 8px; pointer-events: none; }
+
+.buttons { display: flex; gap: 15px; margin-top: 25px; }
+button { border: none; cursor: pointer; border-radius: 12px; padding: 14px 24px; font-weight: 600; font-size: 15px; color: white; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+
+.btn-primary { background: var(--gradient); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
+.btn-primary:hover { box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5); transform: translateY(-2px); }
+.btn-secondary { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; justify-content: center;}
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+
+/* История */
+.history { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 30px; backdrop-filter: blur(30px); }
+.history h2 { font-size: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
+.history-list { display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
+.history-item { padding: 16px; border-radius: 16px; background: var(--input-bg); border: 1px solid var(--input-border); transition: 0.3s; cursor: pointer; }
+.history-item:hover { background: rgba(255, 255, 255, 0.08); transform: translateX(5px); border-color: rgba(255, 255, 255, 0.15); }
+.history-original { color: var(--muted); font-size: 14px; margin-bottom: 8px; white-space: pre-wrap; word-break: break-word; }
+.history-result { font-weight: 500; color: var(--text); font-size: 15px; white-space: pre-wrap; word-break: break-word; }
+.empty { color: var(--muted); text-align: center; padding: 30px; background: rgba(255, 255, 255, 0.02); border-radius: 16px; border: 1px dashed rgba(255, 255, 255, 0.1); }
+
+
+/* Боковое меню */
+
+/* Модальные окна */
+.modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 100; display: none; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
+.modal-overlay.active { display: flex; opacity: 1; }
+.modal-content { background: var(--bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 30px; width: 90%; max-width: 500px; position: relative; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5); transform: translateY(20px); transition: transform 0.3s ease; }
+.modal-overlay.active .modal-content { transform: translateY(0); }
+.modal-close { position: absolute; top: 20px; right: 20px; background: transparent; border: none; color: var(--muted); cursor: pointer; padding: 5px; border-radius: 8px; }
+.modal-close:hover { background: rgba(255,255,255,0.1); color: var(--text); }
+.modal-title { font-size: 22px; font-weight: 700; margin-bottom: 20px; text-align: center; }
+
+/* Настройки (внутри модалки) */
+.settings-section { margin-bottom: 25px; padding-bottom: 20px; border-bottom: 1px solid var(--input-border); }
+.settings-section h3 { font-size: 15px; font-weight: 600; color: var(--muted); margin-bottom: 12px; }
+.settings-list { display: flex; flex-direction: column; gap: 20px; margin-bottom: 25px; }
+.toggle-group { display: flex; align-items: center; justify-content: space-between; cursor: pointer; user-select: none; }
+.toggle-group input { display: none; }
+.toggle-slider { width: 44px; height: 24px; background: rgba(255, 255, 255, 0.1); border-radius: 24px; position: relative; transition: 0.3s; border: 1px solid rgba(255, 255, 255, 0.05); }
+.toggle-slider::after { content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: white; border-radius: 50%; transition: 0.3s; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+.toggle-group input:checked + .toggle-slider { background: var(--accent); border-color: var(--accent); }
+.toggle-group input:checked + .toggle-slider::after { transform: translateX(20px); }
+.toggle-label { font-size: 15px; font-weight: 500; color: var(--text); }
+
+/* Новый стиль маппинга */
+.mapping-container { max-height: 60vh; overflow-y: auto; margin-bottom: 20px; padding-right: 10px; }
+.mapping-section-title { font-size: 16px; font-weight: 600; margin: 25px 0 15px; color: var(--accent); text-align: left; border-bottom: 1px solid var(--input-border); padding-bottom: 10px;}
+.mapping-section-title:first-child { margin-top: 0; }
+.mapping-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 10px; }
+.mapping-item { display: flex; align-items: center; gap: 8px; font-family: monospace; font-size: 16px; background: var(--input-bg); padding: 6px; border-radius: 8px; border: 1px solid var(--input-border); justify-content: center;}
+.mapping-item span { width: 18px; text-align: center; color: var(--muted); font-weight: bold;}
+.mapping-item input { width: 34px; height: 34px; text-align: center; background: rgba(0,0,0,0.3); border: 1px solid var(--input-border); color: var(--text); border-radius: 6px; font-family: monospace; font-size: 16px; outline: none; transition: 0.2s; }
+.mapping-item input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
+
+@media(max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+
+/* --- Кнопка меню (исправление) --- */
+.glass-btn {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    width: 44px;
+    height: 44px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    z-index: 100;
+}
+.glass-btn i {
+    font-family: "Font Awesome 6 Free";
+    font-weight: 900;
+    font-size: 18px;
+    color: inherit;
+}
+.glass-btn i:before {
+    font-style: normal;
+}
+
+.glass-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 15px rgba(167, 139, 250, 0.3);
+}
+
+/* --- Оверлей --- */
+.overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 999;
+}
+.overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* --- Современный Сайдбар --- */
+.sidebar {
+    position: fixed;
+    top: 0;
+    right: -320px; /* Спрятан за экраном */
+    width: 300px;
+    height: 100vh;
+    background: rgba(20, 20, 35, 0.85); /* Полупрозрачный темный фон */
+    backdrop-filter: blur(15px);
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
+    transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+}
+.sidebar.active {
+    right: 0;
+}
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+}
+.sidebar-header h2 {
+    color: #fff;
+    font-size: 1.5rem;
+    margin: 0;
+}
+.close-btn {
+    background: transparent;
+    border: none;
+    color: #a78bfa;
+    font-size: 2rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+.close-btn:hover { color: #fff; }
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 16px;
+    margin-bottom: 10px;
+    color: #cbd5e1;
+    text-decoration: none;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    transition: all 0.2s ease;
+}
+.nav-item:hover {
+    background: rgba(167, 139, 250, 0.15);
+    color: #fff;
+    transform: translateX(5px);
+}
+
+.sidebar-settings {
+    margin-top: auto; /* Прижать к низу */
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    padding-top: 20px;
+}
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: #fff;
+}
+
+/* --- Модальное окно --- */
+.modal {
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0.9);
+    background: #1e1e2f;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    padding: 24px;
+    width: 350px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1001;
+}
+.modal.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+}
+.modal h3 { margin-top: 0; color: #fff; text-align: center; margin-bottom: 20px;}
+.hotkeys-list { list-style: none; padding: 0; margin: 0 0 20px 0; }
+.hotkeys-list li {
+    display: flex;
+    align-items: center;
+    margin-bottom: 12px;
+    color: #cbd5e1;
+}
+kbd {
+    background: #2d2d44;
+    border: 1px solid #474761;
+    border-radius: 6px;
+    padding: 4px 8px;
+    font-family: monospace;
+    font-size: 14px;
+    color: #a78bfa;
+    margin-right: 12px;
+    min-width: 30px;
+    text-align: center;
+    box-shadow: 0 2px 0 #151522;
+}
+.primary-btn {
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, #a78bfa, #ec4899);
+    border: none;
+    border-radius: 8px;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+    transition: opacity 0.2s;
+    justify-content: center;
+}
+.primary-btn:hover { opacity: 0.9; }
+
+.info-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    margin-top: 12px;
+}
+.info-link:hover {
+    color: var(--accent);
+}
+.info-link svg {
+    width: 16px;
+    height: 16px;
+}
+</style>
+</head>
+<body>
+
+<div class="bg">
+    <div class="ball"></div>
+    <div class="ball"></div>
+    <div class="ball"></div>
+</div>
+
+<div class="container">
+    <button class="glass-btn" id="menuBtn" title="Меню (1)">
+        <i class="fa-solid fa-bars"></i>
+    </button>
+
+    <div class="header">
+        <div class="logo">
+            <svg viewBox="0 0 24 24" fill="none" stroke="url(#grad1)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <defs>
+                    <linearGradient id="grad1" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" style="stop-color:#4f46e5;stop-opacity:1" />
+                        <stop offset="100%" style="stop-color:#ec4899;stop-opacity:1" />
+                    </linearGradient>
+                </defs>
+                <rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect>
+                <path d="M6 8h.001M10 8h.001M14 8h.001M18 8h.001M8 12h.001M12 12h.001M16 12h.001M7 16h10"></path>
+            </svg>
+            <h1>LayoutFix</h1>
+        </div>
+        <div class="subtitle" data-i18n="subtitle">Умное исправление раскладки клавиатуры</div>
+    </div>
+
+    <div class="card">
+        <div class="grid">
+            <div class="input-wrapper">
+                <textarea id="input" data-i18n-ph="placeholderIn" placeholder="Введите текст..."></textarea>
+                <div class="info"><span data-i18n="chars">Символов:</span> <span id="count">0</span></div>
+            </div>
+            <div class="input-wrapper">
+                <textarea id="output" readonly data-i18n-ph="placeholderOut" placeholder="Результат..."></textarea>
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button class="btn-primary" onclick="copyResult()" title="Копировать результат (4)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                <span data-i18n="btnCopy">Копировать</span>
+            </button>
+            <button class="btn-secondary" style="width:auto;" onclick="clearAll()" title="Очистить поле (5)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2-2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                <span data-i18n="btnClear">Очистить</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="history" id="historySection">
+        <h2>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+            <span data-i18n="histTitle">История конвертаций</span>
+        </h2>
+        <div id="historyList" class="history-list"></div>
+    </div>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+        <h2>Меню</h2>
+        <button class="close-btn" id="closeSidebarBtn">&times;</button>
+    </div>
+    
+    <a href="#" class="nav-item" id="nav-history" title="История конвертаций (2)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+        История конвертаций
+    </a>
+    <a href="#" class="nav-item" id="nav-settings" title="Настройки (3)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        Настройки
+    </a>
+</div>
+
+<div class="modal" id="hotkeysModal">
+    <h3>Горячие клавиши</h3>
+    <ul class="hotkeys-list">
+        <li><kbd>1</kbd> Открыть меню</li>
+        <li><kbd>2</kbd> История конвертаций</li>
+        <li><kbd>3</kbd> Открыть настройки</li>
+        <li><kbd>4</kbd> Скопировать текст</li>
+        <li><kbd>5</kbd> Очистить поле</li>
+        <li><kbd>Esc</kbd> Закрыть текущее окно</li>
+    </ul>
+    <button class="primary-btn" id="closeModalBtn" title="Закрыть (Esc)">Понятно</button>
+</div>
+
+<div id="settingsModal" class="modal-overlay" onclick="closeModalOutside(event, 'settingsModal')">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeModal('settingsModal')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        <h2 class="modal-title" data-i18n="settingsTitle">Настройки</h2>
+        
+        <div class="settings-section">
+            <h3 data-i18n="langTitle">Язык интерфейса</h3>
+            <div class="lang-switch" style="width: max-content;">
+                <button class="lang-btn active" onclick="setLang('ru')">Русский</button>
+                <button class="lang-btn" onclick="setLang('en')">English</button>
+            </div>
+        </div>
+
+        <div class="settings-list">
+            <label class="toggle-group">
+                <span class="toggle-label" data-i18n="optLetters">Переводить буквы</span>
+                <input type="checkbox" id="optLetters" checked onchange="recalculate()">
+                <div class="toggle-slider"></div>
+            </label>
+            <label class="toggle-group">
+                <span class="toggle-label" data-i18n="optNumbers">Переводить цифры</span>
+                <input type="checkbox" id="optNumbers" checked onchange="recalculate()">
+                <div class="toggle-slider"></div>
+            </label>
+            <label class="toggle-group">
+                <span class="toggle-label" data-i18n="optSymbols">Переводить символы</span>
+                <input type="checkbox" id="optSymbols" checked onchange="recalculate()">
+                <div class="toggle-slider"></div>
+            </label>
+            <label class="toggle-group">
+                <span class="toggle-label" data-i18n="optPunctuation">Переводить знаки препинания</span>
+                <input type="checkbox" id="optPunctuation" checked onchange="recalculate()">
+                <div class="toggle-slider"></div>
+            </label>
+        </div>
+        
+        <button class="btn-secondary" onclick="openMappingModal()" title="Открыть редактор сопоставления символов">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+            <span data-i18n="btnMapping">Настройка конвертации</span>
+        </button>
+        
+        <div style="text-align: center;">
+            <a href="#" class="info-link" onclick="event.preventDefault(); openHotkeysModal();" title="Показать список горячих клавиш">
+                <span data-i18n="hotkeysLink">Горячие клавиши</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+            </a>
+        </div>
+    </div>
+</div>
+
+<div id="mappingModal" class="modal-overlay" onclick="closeModalOutside(event, 'mappingModal')">
+    <div class="modal-content" style="max-width: 600px; height: 90vh;">
+        <button class="modal-close" onclick="backToSettings()" title="Назад (Esc)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        <h2 class="modal-title" style="text-align: center;" data-i18n="mappingTitle">Настройка конвертации</h2>
+        
+        <div class="mapping-container" style="height: 65vh; overflow-y: auto; padding-right: 15px;">
+            <div id="mappingContent"></div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px;">
+            <button class="btn-primary" style="flex: 1; justify-content: center;" onclick="openSaveConfirm()" title="Сохранить изменения">
+                <span data-i18n="btnSave">Сохранить изменения</span>
+            </button>
+            <button class="btn-secondary" style="flex: 1; justify-content: center;" onclick="openResetConfirm()" title="Сбросить все значения">
+                <span data-i18n="resetBtn">Сбросить</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="resetConfirmModal" class="modal-overlay" onclick="closeModalOutside(event, 'resetConfirmModal')">
+    <div class="modal-content" style="max-width: 400px;">
+        <h2 class="modal-title" data-i18n="resetConfirm">Сбросить до значений по-умолчанию?</h2>
+        <p style="color: var(--muted); margin-bottom: 20px;">Это действие невозможно отменить.</p>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-primary" style="flex: 1; justify-content: center;" onclick="confirmReset()" title="Сбросить все значения">
+                <span data-i18n="resetYes">Да, сбросить</span>
+            </button>
+            <button class="btn-secondary" style="flex: 1; justify-content: center;" onclick="closeModal('resetConfirmModal')" title="Отмена">
+                <span data-i18n="resetNo">Нет</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div id="saveConfirmModal" class="modal-overlay" onclick="closeModalOutside(event, 'saveConfirmModal')">
+    <div class="modal-content" style="max-width: 400px;">
+        <h2 class="modal-title" data-i18n="saveConfirm">Сохранить изменения?</h2>
+        <p style="color: var(--muted); margin-bottom: 20px;">Сохранить текущие настройки и вернуться в меню настроек.</p>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-primary" style="flex: 1; justify-content: center;" onclick="confirmSaveMapping()" title="Сохранить изменения">
+                <span data-i18n="saveYes">Да, сохранить</span>
+            </button>
+            <button class="btn-secondary" style="flex: 1; justify-content: center;" onclick="cancelSaveConfirm()" title="Вернуться к настройке конвертации">
+                <span data-i18n="saveNo">Нет, вернуть</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+.mapping-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; font-family: monospace; background: rgba(255,255,255,0.03); padding: 5px 10px; border-radius: 6px; }
+.mapping-row label { flex: 1; font-size: 14px; color: var(--muted); }
+.mapping-row input { width: 40px; height: 30px; text-align: center; background: #000; border: 1px solid var(--input-border); color: white; border-radius: 4px; }
+</style>
+
+<script>
+// Обновленные словари с новыми ключами
+const i18n = {
+    ru: {
+        subtitle: "Умное исправление раскладки клавиатуры",
+        optLetters: "Переводить буквы",
+        optNumbers: "Переводить цифры", 
+        optSymbols: "Переводить символы",
+        optPunctuation: "Переводить знаки препинания",
+        placeholderIn: "Введите текст...",
+        placeholderOut: "Результат...",
+        chars: "Символов:",
+        btnCopy: "Копировать",
+        btnClear: "Очистить",
+        histTitle: "История конвертаций",
+        histEmpty: "История пуста",
+        settingsTitle: "Настройки",
+        langTitle: "Язык интерфейса",
+        btnMapping: "Настройка конвертации",
+        mappingTitle: "Настройка конвертации",
+        btnSave: "Сохранить изменения",
+        mapRuEn: "Русская раскладка - Английская раскладка",
+        mapEnRu: "Английская раскладка - Русская раскладка",
+        keyLabel: "Клавиша",
+        menuTitle: "Меню",
+        menuHistory: "История конвертаций",
+        menuSettings: "Настройки",
+        menuClose: "Закрыть",
+        hotkeysLink: "Горячие клавиши",
+        resetBtn: "Сбросить",
+        resetConfirm: "Сбросить до значений по-умолчанию?",
+        resetYes: "Да, сбросить",
+        resetNo: "Нет",
+        saveConfirm: "Сохранить изменения?",
+        saveYes: "Да, сохранить",
+        saveNo: "Нет, вернуть"
+    },
+    en: {
+        subtitle: "Smart keyboard layout correction",
+        optLetters: "Translate letters",
+        optNumbers: "Translate numbers",
+        optSymbols: "Translate symbols",
+        optPunctuation: "Translate punctuation",
+        placeholderIn: "Enter text...",
+        placeholderOut: "Result...",
+        chars: "Characters:",
+        btnCopy: "Copy",
+        btnClear: "Clear",
+        histTitle: "Conversion History",
+        histEmpty: "History is empty",
+        settingsTitle: "Settings",
+        langTitle: "Interface Language",
+        btnMapping: "Conversion Configuration",
+        mappingTitle: "Conversion Configuration",
+        btnSave: "Save Changes",
+        mapRuEn: "Russian Layout - English Layout",
+        mapEnRu: "English Layout - Russian Layout",
+        keyLabel: "Key",
+        menuTitle: "Menu",
+        menuHistory: "Conversion History",
+        menuSettings: "Settings",
+        menuClose: "Close",
+        hotkeysLink: "Hotkeys",
+        resetBtn: "Reset",
+        resetConfirm: "Reset to default values?",
+        resetYes: "Yes, reset",
+        resetNo: "No",
+        saveConfirm: "Save changes?",
+        saveYes: "Yes, save",
+        saveNo: "No, go back"
+    }
+};
+
+let currentLang = 'ru';
+
+// Исходные строки для генерации словарей по умолчанию
+const defaultEn = "`1234567890-=qwertyuiop[]\\asdfghjkl;'zxcvbnm,./~!@#$%^&*()_+QWERTYUIOP{}|ASDFGHJKL:\"ZXCVBNM<>?";
+const defaultRu = "ё1234567890-=йцукенгшщзхъ\\фывапролджэячсмитьбю.Ё!\"№;%:?*()_+ЙЦУКЕНГШЩЗХЪ/ФЫВАПРОЛДЖЭЯЧСМИТЬБЮ,";
+
+// Словарь для конвертации
+let mappingData = {
+    ruToEn: {},
+    enToRu: {}
+};
+
+for (let i = 0; i < defaultRu.length; i++) {
+    mappingData.ruToEn[defaultRu[i]] = defaultEn[i];
+    mappingData.enToRu[defaultEn[i]] = defaultRu[i];
+}
+
+const elements = {
+    input: document.getElementById('input'),
+    output: document.getElementById('output'),
+    count: document.getElementById('count'),
+    optLetters: document.getElementById('optLetters'),
+    optNumbers: document.getElementById('optNumbers'), // Добавлено управление цифрами
+    optSymbols: document.getElementById('optSymbols'),
+    optPunctuation: document.getElementById('optPunctuation')
+};
+
+function setLang(lang) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.textContent.toLowerCase().includes(lang === 'ru' ? 'русский' : 'english'));
+    });
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        el.textContent = i18n[lang][el.getAttribute('data-i18n')];
+    });
+    document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+        el.placeholder = i18n[lang][el.getAttribute('data-i18n-ph')];
+    });
+    renderHistory();
+}
+
+
+function openModal(id) { document.getElementById(id).classList.add('active'); }
+function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+function closeModalOutside(event, id) { if (event.target.id === id) closeModal(id); }
+
+// Создание элемента настройки символа (Теперь 100% безопасно, создание идет через DOM, а не innerHTML)
+function backToSettings() {
+    closeModal('hotkeysModal');
+    closeModal('mappingModal');
+    closeModal('saveConfirmModal');
+    closeModal('resetConfirmModal');
+    openModal('settingsModal');
+}
+
+function openResetConfirm() {
+    closeModal('mappingModal');
+    openModal('resetConfirmModal');
+}
+
+function confirmReset() {
+    // Сбросить mappingData к значениям по-умолчанию
+    mappingData.ruToEn = {};
+    mappingData.enToRu = {};
+    
+    for (let i = 0; i < defaultRu.length; i++) {
+        mappingData.ruToEn[defaultRu[i]] = defaultEn[i];
+        mappingData.enToRu[defaultEn[i]] = defaultRu[i];
+    }
+    
+    closeModal('resetConfirmModal');
+    openMappingModal();
+}
+
+function openSaveConfirm() {
+    closeModal('mappingModal');
+    openModal('saveConfirmModal');
+}
+
+function cancelSaveConfirm() {
+    closeModal('saveConfirmModal');
+    openMappingModal();
+}
+
+function confirmSaveMapping() {
+    document.querySelectorAll('.mapping-row input').forEach(input => {
+        const type = input.dataset.type;
+        const key = input.dataset.key;
+        mappingData[type][key] = input.value;
+    });
+    closeModal('saveConfirmModal');
+    closeModal('mappingModal');
+    recalculate();
+    openModal('settingsModal');
+}
+
+function openMappingModal() {
+    closeModal('settingsModal');
+    const container = document.getElementById('mappingContent');
+    container.innerHTML = '';
+
+    const addSection = (title, mapObj, prefix) => {
+        const div = document.createElement('div');
+        
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'mapping-section-title';
+        titleDiv.textContent = title;
+        div.appendChild(titleDiv);
+
+        for (const [key, val] of Object.entries(mapObj)) {
+            const row = document.createElement('div');
+            row.className = 'mapping-row';
+            
+            const label = document.createElement('label');
+            label.textContent = `${i18n[currentLang].keyLabel} "${key}"`;
+            
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.maxLength = 1;
+            input.value = val;
+            input.dataset.key = key; 
+            input.dataset.type = prefix;
+            
+            row.appendChild(label);
+            row.appendChild(input);
+            div.appendChild(row);
+        }
+        container.appendChild(div);
+    };
+
+    // Теперь используем переведенные заголовки
+    addSection(i18n[currentLang].mapRuEn, mappingData.ruToEn, 'ruToEn');
+    addSection(i18n[currentLang].mapEnRu, mappingData.enToRu, 'enToRu');
+    
+    openModal('mappingModal');
+}
+
+function saveMapping() {
+    openSaveConfirm();
+}
+
+function confirmSaveMapping() {
+    document.querySelectorAll('.mapping-row input').forEach(input => {
+        const type = input.dataset.type;
+        const key = input.dataset.key;
+        mappingData[type][key] = input.value;
+    });
+    closeModal('saveConfirmModal');
+    closeModal('mappingModal');
+    recalculate();
+    openModal('settingsModal');
+}
+
+function cancelSaveConfirm() {
+    closeModal('saveConfirmModal');
+    openMappingModal();
+}
+
+// Логика конвертации (добавлена отдельная категория для цифр)
+function getCharCategory(char) {
+    if (/[a-zA-Zа-яА-ЯёЁ]/.test(char)) return 'letter';
+    if (/[0-9]/.test(char)) return 'number';
+    if (/[.,;:'"?!()[\]{}<>\\\/|]/.test(char)) return 'punctuation';
+    if (!/[\s\n\r\t]/.test(char)) return 'symbol'; 
+    return 'space';
+}
+
+function convert(text) {
+    if (!text) return "";
+
+    let enScore = 0;
+    let ruScore = 0;
+
+    // 1. Умное определение доминирующей раскладки текста
+    for (const char of text) {
+        if (/[a-zA-Z]/.test(char)) enScore += 10;
+        else if (/[а-яА-ЯёЁ]/.test(char)) ruScore += 10;
+        else {
+            const inEn = mappingData.enToRu.hasOwnProperty(char);
+            const inRu = mappingData.ruToEn.hasOwnProperty(char);
+            // Символы, специфичные только для одной из раскладок (например @ или №)
+            if (inEn && !inRu) enScore += 2;
+            if (inRu && !inEn) ruScore += 2;
+        }
+    }
+
+    const doLetters = elements.optLetters.checked;
+    const doNumbers = elements.optNumbers.checked;
+    const doSymbols = elements.optSymbols.checked;
+    const doPunc = elements.optPunctuation.checked;
+
+    let result = "";
+
+    for (const char of text) {
+        const category = getCharCategory(char);
+        
+        if (category === 'letter' && !doLetters) { result += char; continue; }
+        if (category === 'number' && !doNumbers) { result += char; continue; }
+        if (category === 'punctuation' && !doPunc) { result += char; continue; }
+        if (category === 'symbol' && !doSymbols) { result += char; continue; }
+
+        let charSourceIsEn = true;
+
+        // 2. Определяем направление конвертации
+        if (enScore > ruScore) {
+            charSourceIsEn = true;
+        } else if (ruScore > enScore) {
+            charSourceIsEn = false;
+        } else {
+            // 3. Если ничья (ввели только цифры/общие знаки), смотрим, 
+            // какая раскладка РЕАЛЬНО меняет символ по настройкам пользователя.
+            const valEn = mappingData.enToRu[char];
+            const valRu = mappingData.ruToEn[char];
+            
+            const enChanges = valEn !== undefined && valEn !== char;
+            const ruChanges = valRu !== undefined && valRu !== char;
+
+            if (ruChanges && !enChanges) {
+                charSourceIsEn = false; // Применяем RU->EN, так как там есть правило
+            } else if (enChanges && !ruChanges) {
+                charSourceIsEn = true;  // Применяем EN->RU
+            } else {
+                charSourceIsEn = true;  // По умолчанию EN->RU
+            }
+        }
+
+        // 4. Применяем конвертацию с умным фоллбэком
+        if (charSourceIsEn) {
+            const converted = mappingData.enToRu[char];
+            if (converted === undefined && mappingData.ruToEn[char] !== undefined) {
+                result += mappingData.ruToEn[char]; // Фоллбэк на другую раскладку
+            } else {
+                result += converted !== undefined ? converted : char;
+            }
+        } else {
+            const converted = mappingData.ruToEn[char];
+            if (converted === undefined && mappingData.enToRu[char] !== undefined) {
+                result += mappingData.enToRu[char]; // Фоллбэк на другую раскладку
+            } else {
+                result += converted !== undefined ? converted : char;
+            }
+        }
+    }
+    return result;
+}
+
+let typingTimer;
+elements.input.addEventListener('input', () => {
+    recalculate();
+    clearTimeout(typingTimer);
+    typingTimer = setTimeout(() => {
+        const text = elements.input.value;
+        if(text.trim()) saveHistory(text, elements.output.value);
+    }, 1500);
+});
+
+function recalculate() {
+    const text = elements.input.value;
+    elements.count.textContent = text.length;
+    elements.output.value = convert(text);
+}
+
+function copyResult() {
+    if (!elements.output.value) return;
+    navigator.clipboard.writeText(elements.output.value);
+    const btn = document.querySelector('.btn-primary span');
+    const originalText = btn.textContent;
+    btn.textContent = currentLang === 'ru' ? "Скопировано!" : "Copied!";
+    setTimeout(() => { btn.textContent = originalText; }, 2000);
+}
+
+function clearAll() {
+    elements.input.value = "";
+    elements.output.value = "";
+    elements.count.textContent = "0";
+}
+
+function saveHistory(original, result) {
+    if (!original.trim()) return;
+    let history = JSON.parse(localStorage.getItem("layout_history")) || [];
+    if (history.length && history[0].original === original) return;
+    history.unshift({ original, result });
+    history = history.slice(0, 10);
+    localStorage.setItem("layout_history", JSON.stringify(history));
+    renderHistory();
+}
+
+function renderHistory() {
+    const list = document.getElementById("historyList");
+    const history = JSON.parse(localStorage.getItem("layout_history")) || [];
+    if (!history.length) {
+        list.innerHTML = `<div class="empty">${i18n[currentLang].histEmpty}</div>`;
+        return;
+    }
+    list.innerHTML = history.map(item => `
+        <div class="history-item" onclick="loadFromHistory(this)">
+            <div class="history-original">${escapeHtml(item.original)}</div>
+            <div class="history-result">${escapeHtml(item.result)}</div>
+        </div>
+    `).join('');
+}
+
+function loadFromHistory(element) {
+    elements.input.value = element.querySelector('.history-original').textContent;
+    recalculate();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+renderHistory();
+setLang('ru');
+
+// ========== НОВЫЙ КОД: UI И ГОРЯЧИЕ КЛАВИШИ ==========
+
+// Получаем элементы
+const menuBtn = document.getElementById('menuBtn');
+const sidebar = document.getElementById('sidebar');
+const overlay = document.getElementById('overlay');
+const closeSidebarBtn = document.getElementById('closeSidebarBtn');
+
+const infoHotkeysBtn = document.getElementById('nav-history'); // Используем nav-history как триггер для Esc (показывать горячие клавиши)
+const hotkeysModal = document.getElementById('hotkeysModal');
+const closeModalBtn = document.getElementById('closeModalBtn');
+
+// --- Управление UI ---
+
+function openSidebar() {
+    sidebar.classList.add('active');
+    overlay.classList.add('active');
+}
+
+function closeAll() {
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+    hotkeysModal.classList.remove('active');
+    document.getElementById('settingsModal').classList.remove('active');
+    document.getElementById('mappingModal').classList.remove('active');
+    document.getElementById('resetConfirmModal').classList.remove('active');
+    document.getElementById('saveConfirmModal')?.classList.remove('active');
+}
+
+function openHotkeysModal() {
+    hotkeysModal.classList.add('active');
+    overlay.classList.add('active');
+    sidebar.classList.remove('active');
+}
+
+// Слушатели кликов
+menuBtn.addEventListener('click', openSidebar);
+closeSidebarBtn.addEventListener('click', closeAll);
+overlay.addEventListener('click', closeAll);
+closeModalBtn.addEventListener('click', backToSettings);
+
+// Обработка клика на историю и настройки
+document.getElementById('nav-history').addEventListener('click', (e) => {
+    e.preventDefault();
+    closeAll();
+    document.getElementById('historySection').scrollIntoView({ behavior: 'smooth' });
+});
+
+document.getElementById('nav-settings').addEventListener('click', (e) => {
+    e.preventDefault();
+    closeAll();
+    openModal('settingsModal');
+});
+
+// --- ГОРЯЧИЕ КЛАВИШИ ---
+
+document.addEventListener('keydown', (e) => {
+    // ВАЖНО: Если пользователь сейчас печатает в textarea или input, 
+    // мы НЕ должны применять горячие клавиши (кроме Esc)
+    const isTyping = e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT';
+
+    if (e.key === 'Escape') {
+        e.preventDefault();
+        
+        // Проверяем, открыто ли какое-то окно или сайдбар
+        const settingsModal = document.getElementById('settingsModal');
+        const mappingModal = document.getElementById('mappingModal');
+        const resetConfirmModal = document.getElementById('resetConfirmModal');
+        const saveConfirmModal = document.getElementById('saveConfirmModal');
+        const hotkeysModal = document.getElementById('hotkeysModal');
+        const sidebar = document.getElementById('sidebar');
+        
+        const isMappingOpen = mappingModal.classList.contains('active');
+        const isResetOpen = resetConfirmModal.classList.contains('active');
+        const isSaveOpen = saveConfirmModal && saveConfirmModal.classList.contains('active');
+        const isSettingsOpen = settingsModal.classList.contains('active');
+        const isHotkeysOpen = hotkeysModal.classList.contains('active');
+        const isSidebarOpen = sidebar.classList.contains('active');
+        
+        if (isSaveOpen) {
+            cancelSaveConfirm();
+        } else if (isMappingOpen) {
+            backToSettings();
+        } else if (isResetOpen) {
+            closeModal('resetConfirmModal');
+            openMappingModal();
+        } else if (isSettingsOpen || isHotkeysOpen || isSidebarOpen) {
+            closeAll();
+        } else if (isTyping) {
+            e.target.blur();
+        }
+        return;
+    }
+
+    if (isTyping) return; // Игнорируем остальные клавиши, если идет печать
+
+    switch(e.key) {
+        case '1':
+            e.preventDefault();
+            openSidebar();
+            break;
+        case '2':
+            e.preventDefault();
+            closeAll();
+            document.getElementById('historySection').scrollIntoView({ behavior: 'smooth' });
+            break;
+        case '3':
+            e.preventDefault();
+            closeAll();
+            openModal('settingsModal');
+            break;
+        case '4':
+            e.preventDefault();
+            copyResult(); // Использует существующую функцию
+            break;
+        case '5':
+            e.preventDefault();
+            clearAll(); // Использует существующую функцию
+            break;
+    }
+});
+</script>
+</body>
+</html>
