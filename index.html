@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>LayoutFix - Smart Keyboard Converter</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.0/css/all.min.css" crossorigin="anonymous" />
@@ -76,11 +77,11 @@ textarea.error { border-color: var(--danger); box-shadow: 0 0 0 4px rgba(239, 68
 .info { position: absolute; bottom: 15px; right: 20px; color: var(--muted); font-size: 13px; background: rgba(0,0,0,0.4); padding: 4px 10px; border-radius: 8px; pointer-events: none; }
 
 .buttons { display: flex; gap: 15px; margin-top: 25px; }
-button { border: none; cursor: pointer; border-radius: 12px; padding: 14px 24px; font-weight: 600; font-size: 15px; color: white; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+button { border: none; cursor: pointer; border-radius: 12px; padding: 14px 24px; font-weight: 600; font-size: 15px; color: white; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 8px; }
 
 .btn-primary { background: var(--gradient); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
 .btn-primary:hover { box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5); }
-.btn-secondary { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; justify-content: center;}
+.btn-secondary { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); justify-content: center; }
 .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
 
 .history-icon-btn { width: 38px; min-width: 38px; height: 38px; padding: 0; justify-content: center; border-radius: 12px; }
@@ -146,6 +147,26 @@ button { border: none; cursor: pointer; border-radius: 12px; padding: 14px 24px;
 .mapping-item input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2); }
 
 @media(max-width: 800px) { .grid { grid-template-columns: 1fr; } }
+
+@media(max-width: 600px) {
+    .logo svg { width: 24px; height: 24px; }
+    .logo h1 { font-size: 21px; }
+    .subtitle { font-size: 12px; }
+    .buttons {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+    .buttons button {
+        width: 100%;
+        min-width: 120px;
+        padding: 12px 18px;
+    }
+}
+
+button:disabled {
+    cursor: not-allowed;
+}
 
 /* --- Кнопка меню (исправление) --- */
 .glass-btn {
@@ -383,8 +404,8 @@ kbd {
     <div class="card">
         <div class="grid">
             <div class="input-wrapper">
-                <textarea id="input" data-i18n-ph="placeholderIn" placeholder="Введите текст..."></textarea>
-                <div class="info"><span data-i18n="chars">Символов:</span> <span id="count">0</span></div>
+                <textarea id="input" data-i18n-ph="placeholderIn" placeholder="Введите текст..." maxlength="200"></textarea>
+                <div class="info"><span data-i18n="chars">Символов:</span> <span id="count">0</span>/200</div>
             </div>
             <div class="input-wrapper">
                 <textarea id="output" readonly data-i18n-ph="placeholderOut" placeholder="Результат..."></textarea>
@@ -392,11 +413,11 @@ kbd {
         </div>
 
         <div class="buttons">
-            <button class="btn-primary" onclick="copyResult()" data-i18n-title="btnCopyHint" title="Копировать результат (4)">
+            <button class="btn-primary" id="copyBtn" onclick="copyResult()" data-i18n-title="btnCopyHint" title="Копировать результат (4)" disabled>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 <span data-i18n="btnCopy">Копировать</span>
             </button>
-            <button class="btn-secondary" style="width:auto;" onclick="clearAll()" data-i18n-title="btnClearHint" title="Очистить поле (5)">
+            <button class="btn-secondary" id="clearBtn" onclick="clearAll()" data-i18n-title="btnClearHint" title="Очистить поле (5)" disabled>
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2-2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 <span data-i18n="btnClear">Очистить</span>
             </button>
@@ -962,14 +983,33 @@ function convert(text) {
 }
 
 let typingTimer;
+const copyBtn = document.getElementById('copyBtn');
+const clearBtn = document.getElementById('clearBtn');
+
 elements.input.addEventListener('input', () => {
     recalculate();
+    updateActionButtons();
     clearTimeout(typingTimer);
     typingTimer = setTimeout(() => {
         const text = elements.input.value;
         if(text.trim()) saveHistory(text, elements.output.value);
     }, 1500);
 });
+
+function initActionButtons() {
+    updateActionButtons();
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', updateActionButtons);
+    }
+}
+
+function updateActionButtons() {
+    const hasText = !!elements.input.value.trim();
+    copyBtn.disabled = !hasText;
+    clearBtn.disabled = !hasText;
+    copyBtn.style.opacity = hasText ? '1' : '0.6';
+    clearBtn.style.opacity = hasText ? '1' : '0.6';
+}
 
 function recalculate() {
     const text = elements.input.value;
@@ -990,6 +1030,7 @@ function clearAll() {
     elements.input.value = "";
     elements.output.value = "";
     elements.count.textContent = "0";
+    updateActionButtons();
 }
 
 function saveHistory(original, result) {
@@ -1035,6 +1076,7 @@ function renderHistory() {
 function loadFromHistory(element) {
     elements.input.value = element.querySelector('.history-original').textContent;
     recalculate();
+    updateActionButtons();
     window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
@@ -1079,6 +1121,7 @@ function confirmDeleteHistory() {
 
 renderHistory();
 setLang('ru');
+initActionButtons();
 
 // Закрывать активные модальные окна и оверлеи по Esc
 document.addEventListener('keydown', (e) => {
