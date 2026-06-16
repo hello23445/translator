@@ -59,7 +59,7 @@ body { background: var(--bg); color: var(--text); min-height: 100vh; overflow-x:
 .header { text-align: center; }
 .logo { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 10px; }
 .logo svg { width: 48px; height: 48px; filter: drop-shadow(0 0 10px rgba(99, 102, 241, 0.5)); }
-.logo h1 { font-size: 42px; font-weight: 800; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
+.logo h1 { font-size: 42px; font-weight: 800; background: var(--gradient); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; letter-spacing: -1px; }
 .subtitle { color: var(--muted); font-size: 16px; }
 
 /* Основная карточка */
@@ -79,16 +79,34 @@ textarea.error { border-color: var(--danger); box-shadow: 0 0 0 4px rgba(239, 68
 button { border: none; cursor: pointer; border-radius: 12px; padding: 14px 24px; font-weight: 600; font-size: 15px; color: white; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
 
 .btn-primary { background: var(--gradient); box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3); }
-.btn-primary:hover { box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5); transform: translateY(-2px); }
+.btn-primary:hover { box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5); }
 .btn-secondary { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); width: 100%; justify-content: center;}
-.btn-secondary:hover { background: rgba(255, 255, 255, 0.1); transform: translateY(-2px); }
+.btn-secondary:hover { background: rgba(255, 255, 255, 0.1); }
+
+.history-icon-btn { width: 38px; min-width: 38px; height: 38px; padding: 0; justify-content: center; border-radius: 12px; }
+.history-icon-btn i { font-size: 16px; }
+.history-item .history-icon-btn { margin-top: 8px; }
+
+/* Кнопка удаления внутри элемента истории */
+.history-item { position: relative; padding: 16px; border-radius: 16px; background: var(--input-bg); border: 1px solid var(--input-border); transition: background 0.2s; cursor: pointer; }
+.history-item .item-delete-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: transparent;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 8px;
+}
+.history-item .item-delete-btn:hover { background: rgba(255,255,255,0.03); color: var(--danger); }
 
 /* История */
 .history { background: var(--card-bg); border: 1px solid var(--card-border); border-radius: 24px; padding: 30px; backdrop-filter: blur(30px); }
 .history h2 { font-size: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; }
 .history-list { display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; padding-right: 5px; }
-.history-item { padding: 16px; border-radius: 16px; background: var(--input-bg); border: 1px solid var(--input-border); transition: 0.3s; cursor: pointer; }
-.history-item:hover { background: rgba(255, 255, 255, 0.08); transform: translateX(5px); border-color: rgba(255, 255, 255, 0.15); }
+.history-item:hover { background: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.15); }
 .history-original { color: var(--muted); font-size: 14px; margin-bottom: 8px; white-space: pre-wrap; word-break: break-word; }
 .history-result { font-weight: 500; color: var(--text); font-size: 15px; white-space: pre-wrap; word-break: break-word; }
 .empty { color: var(--muted); text-align: center; padding: 30px; background: rgba(255, 255, 255, 0.02); border-radius: 16px; border: 1px dashed rgba(255, 255, 255, 0.1); }
@@ -323,9 +341,16 @@ kbd {
     width: 16px;
     height: 16px;
 }
+.my_header{
+    margin-top: 10%;
+}
 </style>
 </head>
 <body>
+<!-- Верхний отступ -->
+<div class="my_header">
+    
+</div>
 
 <div class="bg">
     <div class="ball"></div>
@@ -334,7 +359,7 @@ kbd {
 </div>
 
 <div class="container">
-    <button class="glass-btn" id="menuBtn" title="Меню (1)">
+    <button class="glass-btn" id="menuBtn" data-i18n-title="menuTitleHint" title="Меню (1)">
         <i class="fa-solid fa-bars"></i>
     </button>
 
@@ -367,11 +392,11 @@ kbd {
         </div>
 
         <div class="buttons">
-            <button class="btn-primary" onclick="copyResult()" title="Копировать результат (4)">
+            <button class="btn-primary" onclick="copyResult()" data-i18n-title="btnCopyHint" title="Копировать результат (4)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
                 <span data-i18n="btnCopy">Копировать</span>
             </button>
-            <button class="btn-secondary" style="width:auto;" onclick="clearAll()" title="Очистить поле (5)">
+            <button class="btn-secondary" style="width:auto;" onclick="clearAll()" data-i18n-title="btnClearHint" title="Очистить поле (5)">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2-2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                 <span data-i18n="btnClear">Очистить</span>
             </button>
@@ -382,6 +407,9 @@ kbd {
         <h2>
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
             <span data-i18n="histTitle">История конвертаций</span>
+            <button id="clearHistoryBtn" class="btn-secondary history-icon-btn" style="margin-left:auto;" onclick="openClearHistoryConfirm()" data-i18n-title="clearHistoryBtn" aria-label="Очистить историю">
+                <i class="fa-solid fa-eraser"></i>
+            </button>
         </h2>
         <div id="historyList" class="history-list"></div>
     </div>
@@ -389,32 +417,33 @@ kbd {
 
 <div class="overlay" id="overlay"></div>
 <div class="sidebar" id="sidebar">
+    <div class="my_header"></div>
     <div class="sidebar-header">
-        <h2>Меню</h2>
+        <h2 data-i18n="menuTitle">Меню</h2>
         <button class="close-btn" id="closeSidebarBtn">&times;</button>
     </div>
     
-    <a href="#" class="nav-item" id="nav-history" title="История конвертаций (2)">
+    <a href="#" class="nav-item" id="nav-history" data-i18n-title="menuHistoryHint" title="История конвертаций (2)">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-        История конвертаций
+        <span data-i18n="menuHistory">История конвертаций</span>
     </a>
-    <a href="#" class="nav-item" id="nav-settings" title="Настройки (3)">
+    <a href="#" class="nav-item" id="nav-settings" data-i18n-title="menuSettingsHint" title="Настройки (3)">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-        Настройки
+        <span data-i18n="menuSettings">Настройки</span>
     </a>
 </div>
 
 <div class="modal" id="hotkeysModal">
-    <h3>Горячие клавиши</h3>
+    <h3 data-i18n="hotkeysTitle">Горячие клавиши</h3>
     <ul class="hotkeys-list">
-        <li><kbd>1</kbd> Открыть меню</li>
-        <li><kbd>2</kbd> История конвертаций</li>
-        <li><kbd>3</kbd> Открыть настройки</li>
-        <li><kbd>4</kbd> Скопировать текст</li>
-        <li><kbd>5</kbd> Очистить поле</li>
-        <li><kbd>Esc</kbd> Закрыть текущее окно</li>
+        <li><kbd>1</kbd> <span data-i18n="hk1">Открыть меню</span></li>
+        <li><kbd>2</kbd> <span data-i18n="hk2">История конвертаций</span></li>
+        <li><kbd>3</kbd> <span data-i18n="hk3">Открыть настройки</span></li>
+        <li><kbd>4</kbd> <span data-i18n="hk4">Скопировать текст</span></li>
+        <li><kbd>5</kbd> <span data-i18n="hk5">Очистить поле</span></li>
+        <li><kbd>Esc</kbd> <span data-i18n="hk6">Закрыть текущее окно</span></li>
     </ul>
-    <button class="primary-btn" id="closeModalBtn" title="Закрыть (Esc)">Понятно</button>
+    <button class="primary-btn" id="closeModalBtn" title="Закрыть (Esc)" data-i18n="btnUnderstood">Понятно</button>
 </div>
 
 <div id="settingsModal" class="modal-overlay" onclick="closeModalOutside(event, 'settingsModal')">
@@ -451,6 +480,11 @@ kbd {
                 <input type="checkbox" id="optPunctuation" checked onchange="recalculate()">
                 <div class="toggle-slider"></div>
             </label>
+            <label class="toggle-group">
+                <span class="toggle-label" data-i18n="optCloseConfirm">Подтверждение закрытия</span>
+                <input type="checkbox" id="optCloseConfirm" onchange="onCloseConfirmToggle(this)">
+                <div class="toggle-slider"></div>
+            </label>
         </div>
         
         <button class="btn-secondary" onclick="openMappingModal()" title="Открыть редактор сопоставления символов">
@@ -468,25 +502,25 @@ kbd {
 </div>
 
 <div id="mappingModal" class="modal-overlay" onclick="closeModalOutside(event, 'mappingModal')">
-    <div class="modal-content" style="max-width: 600px; height: 90vh;">
-        <button class="modal-close" onclick="backToSettings()" title="Назад (Esc)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+    <div class="modal-content" style="max-width: 600px; height: 90vh; display: flex; flex-direction: column;">
+        <div class="my_header"></div>
+        <button class="modal-close" style="margin-top: 8%;" onclick="backToSettings()" title="Назад (Esc)"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
         <h2 class="modal-title" style="text-align: center;" data-i18n="mappingTitle">Настройка конвертации</h2>
         
-        <div class="mapping-container" style="height: 65vh; overflow-y: auto; padding-right: 15px;">
+        <div class="mapping-container" style="flex: 1 1 auto; overflow-y: auto; padding-right: 15px;">
             <div id="mappingContent"></div>
         </div>
         
-        <div style="display: flex; gap: 10px; margin-top: 10px;">
-            <button class="btn-primary" style="flex: 1; justify-content: center;" onclick="openSaveConfirm()" title="Сохранить изменения">
+        <div class="mapping-actions" style="margin-top: 12px;">
+            <button class="btn-primary" onclick="openSaveConfirm()" title="Сохранить изменения">
                 <span data-i18n="btnSave">Сохранить изменения</span>
             </button>
-            <button class="btn-secondary" style="flex: 1; justify-content: center;" onclick="openResetConfirm()" title="Сбросить все значения">
+            <button class="btn-secondary" onclick="openResetConfirm()" title="Сбросить все значения">
                 <span data-i18n="resetBtn">Сбросить</span>
             </button>
         </div>
     </div>
 </div>
-
 <div id="resetConfirmModal" class="modal-overlay" onclick="closeModalOutside(event, 'resetConfirmModal')">
     <div class="modal-content" style="max-width: 400px;">
         <h2 class="modal-title" data-i18n="resetConfirm">Сбросить до значений по-умолчанию?</h2>
@@ -517,10 +551,35 @@ kbd {
     </div>
 </div>
 
+<div id="clearHistoryConfirmModal" class="modal-overlay" onclick="closeModalOutside(event, 'clearHistoryConfirmModal')">
+    <div class="modal-content" style="max-width: 420px;">
+        <h2 class="modal-title" data-i18n="clearHistoryConfirm">Очистить историю?</h2>
+        <p style="color: var(--muted); margin-bottom: 20px;" data-i18n="clearHistoryNote">Это действие удалит все записи истории и не может быть отменено.</p>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-primary" style="flex: 1; justify-content: center;" onclick="confirmClearHistory()" data-i18n="clearHistoryYes">Да, удалить</button>
+            <button class="btn-secondary" style="flex: 1; justify-content: center;" onclick="closeModal('clearHistoryConfirmModal')" data-i18n="clearHistoryNo">Отмена</button>
+        </div>
+    </div>
+</div>
+
+<div id="deleteItemConfirmModal" class="modal-overlay" onclick="closeModalOutside(event, 'deleteItemConfirmModal')">
+    <div class="modal-content" style="max-width: 420px;">
+        <h2 class="modal-title" data-i18n="deleteConfirm">Удалить запись?</h2>
+        <p style="color: var(--muted); margin-bottom: 20px;" data-i18n="deleteNote">Вы уверены, что хотите удалить эту запись истории?</p>
+        <div style="display: flex; gap: 10px;">
+            <button class="btn-primary" style="flex: 1; justify-content: center;" onclick="confirmDeleteHistory()" data-i18n="deleteYes">Да, удалить</button>
+            <button class="btn-secondary" style="flex: 1; justify-content: center;" onclick="closeModal('deleteItemConfirmModal')" data-i18n="deleteNo">Отмена</button>
+        </div>
+    </div>
+</div>
+
 <style>
 .mapping-row { display: flex; align-items: center; gap: 10px; margin-bottom: 5px; font-family: monospace; background: rgba(255,255,255,0.03); padding: 5px 10px; border-radius: 6px; }
 .mapping-row label { flex: 1; font-size: 14px; color: var(--muted); }
 .mapping-row input { width: 40px; height: 30px; text-align: center; background: #000; border: 1px solid var(--input-border); color: white; border-radius: 4px; }
+
+.mapping-actions { display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap; }
+.mapping-actions button { flex: 1; min-width: 0; }
 </style>
 
 <script>
@@ -559,6 +618,32 @@ const i18n = {
         saveConfirm: "Сохранить изменения?",
         saveYes: "Да, сохранить",
         saveNo: "Нет, вернуть"
+        ,
+        hotkeysTitle: "Горячие клавиши",
+        hk1: "Открыть меню",
+        hk2: "История конвертаций",
+        hk3: "Открыть настройки",
+        hk4: "Скопировать текст",
+        hk5: "Очистить поле",
+        hk6: "Закрыть текущее окно",
+        btnUnderstood: "Понятно",
+        menuTitleHint: "Меню (1)",
+        menuHistoryHint: "История конвертаций (2)",
+        menuSettingsHint: "Настройки (3)",
+        optCloseConfirm: "Подтверждение закрытия",
+        btnCopyHint: "Копировать результат (4)",
+        btnClearHint: "Очистить поле (5)",
+        clearHistoryBtn: "Очистить историю",
+        clearHistoryConfirm: "Очистить историю?",
+        clearHistoryNote: "Это действие удалит все записи истории и не может быть отменено.",
+        clearHistoryYes: "Да, удалить",
+        clearHistoryNo: "Отмена",
+        deleteConfirm: "Удалить запись?",
+        deleteNote: "Вы уверены, что хотите удалить эту запись истории?",
+        deleteYes: "Да, удалить",
+        deleteNo: "Отмена",
+        deleteItemHint: "Удалить запись",
+        deleteBtn: "Удалить",
     },
     en: {
         subtitle: "Smart keyboard layout correction",
@@ -593,6 +678,32 @@ const i18n = {
         saveConfirm: "Save changes?",
         saveYes: "Yes, save",
         saveNo: "No, go back"
+        ,
+        hotkeysTitle: "Hotkeys",
+        hk1: "Open menu",
+        hk2: "Conversion history",
+        hk3: "Open settings",
+        hk4: "Copy text",
+        hk5: "Clear field",
+        hk6: "Close current window",
+        btnUnderstood: "Understood",
+        menuTitleHint: "Menu (1)",
+        menuHistoryHint: "Conversion history (2)",
+        menuSettingsHint: "Settings (3)",
+        optCloseConfirm: "Closing confirmation",
+        btnCopyHint: "Copy result (4)",
+        btnClearHint: "Clear field (5)",
+        clearHistoryBtn: "Clear history",
+        clearHistoryConfirm: "Clear history?",
+        clearHistoryNote: "This will remove all history entries and cannot be undone.",
+        clearHistoryYes: "Yes, delete",
+        clearHistoryNo: "Cancel",
+        deleteConfirm: "Delete entry?",
+        deleteNote: "Are you sure you want to delete this history entry?",
+        deleteYes: "Yes, delete",
+        deleteNo: "Cancel",
+        deleteItemHint: "Delete entry",
+        deleteBtn: "Delete",
     }
 };
 
@@ -620,7 +731,8 @@ const elements = {
     optLetters: document.getElementById('optLetters'),
     optNumbers: document.getElementById('optNumbers'), // Добавлено управление цифрами
     optSymbols: document.getElementById('optSymbols'),
-    optPunctuation: document.getElementById('optPunctuation')
+    optPunctuation: document.getElementById('optPunctuation'),
+    optCloseConfirm: document.getElementById('optCloseConfirm')
 };
 
 function setLang(lang) {
@@ -633,6 +745,11 @@ function setLang(lang) {
     });
     document.querySelectorAll('[data-i18n-ph]').forEach(el => {
         el.placeholder = i18n[lang][el.getAttribute('data-i18n-ph')];
+    });
+    // Устанавливаем атрибут title из data-i18n-title если задан
+    document.querySelectorAll('[data-i18n-title]').forEach(el => {
+        const key = el.getAttribute('data-i18n-title');
+        if (key && i18n[lang] && i18n[lang][key]) el.title = i18n[lang][key];
     });
     renderHistory();
 }
@@ -648,6 +765,8 @@ function backToSettings() {
     closeModal('mappingModal');
     closeModal('saveConfirmModal');
     closeModal('resetConfirmModal');
+    // Убираем глобальный оверлей (если открыт от модалки горячих клавиш), затем открываем настройки
+    try { document.getElementById('overlay').classList.remove('active'); } catch(e){}
     openModal('settingsModal');
 }
 
@@ -890,12 +1009,27 @@ function renderHistory() {
         list.innerHTML = `<div class="empty">${i18n[currentLang].histEmpty}</div>`;
         return;
     }
-    list.innerHTML = history.map(item => `
-        <div class="history-item" onclick="loadFromHistory(this)">
+    list.innerHTML = history.map((item, idx) => `
+        <div class="history-item" data-idx="${idx}" onclick="loadFromHistory(this)">
             <div class="history-original">${escapeHtml(item.original)}</div>
             <div class="history-result">${escapeHtml(item.result)}</div>
+            <button class="item-delete-btn" onclick="event.stopPropagation(); promptDeleteHistory(${idx})" title="" data-i18n-title="deleteItemHint" aria-label="Удалить">
+                <i class="fa-solid fa-trash"></i>
+            </button>
         </div>
     `).join('');
+
+    // Apply i18n for dynamic elements inside history list
+    try{
+        list.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            if (key && i18n[currentLang] && i18n[currentLang][key]) el.textContent = i18n[currentLang][key];
+        });
+        list.querySelectorAll('[data-i18n-title]').forEach(el => {
+            const key = el.getAttribute('data-i18n-title');
+            if (key && i18n[currentLang] && i18n[currentLang][key]) el.title = i18n[currentLang][key];
+        });
+    } catch(e){}
 }
 
 function loadFromHistory(element) {
@@ -910,8 +1044,111 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Helper: pending delete index for history operations
+let pendingDeleteIndex = null;
+
+function openClearHistoryConfirm() {
+    openModal('clearHistoryConfirmModal');
+}
+
+function confirmClearHistory() {
+    try {
+        localStorage.removeItem('layout_history');
+    } catch(e){}
+    renderHistory();
+    closeModal('clearHistoryConfirmModal');
+}
+
+function promptDeleteHistory(idx) {
+    pendingDeleteIndex = idx;
+    openModal('deleteItemConfirmModal');
+}
+
+function confirmDeleteHistory() {
+    try {
+        let history = JSON.parse(localStorage.getItem('layout_history')) || [];
+        if (pendingDeleteIndex !== null && pendingDeleteIndex >= 0 && pendingDeleteIndex < history.length) {
+            history.splice(pendingDeleteIndex, 1);
+            localStorage.setItem('layout_history', JSON.stringify(history));
+        }
+    } catch(e){}
+    pendingDeleteIndex = null;
+    renderHistory();
+    closeModal('deleteItemConfirmModal');
+}
+
 renderHistory();
 setLang('ru');
+
+// Закрывать активные модальные окна и оверлеи по Esc
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.key === 'Esc') {
+        try {
+            // Закрываем все overlay/modal элементы с классом active
+            document.querySelectorAll('.modal-overlay.active, .modal.active, .overlay.active').forEach(el => {
+                el.classList.remove('active');
+            });
+            // Сбросим pendingDeleteIndex если была открыта модалка удаления
+            pendingDeleteIndex = null;
+        } catch (err) { /* ignore */ }
+    }
+});
+
+// Инициализация переключателя подтверждения закрытия и интеграция с Telegram WebApp (best-effort)
+(function(){
+    // Функция-обработчик, вызываемая при переключении чекбокса
+    window.onCloseConfirmToggle = function(el){
+        try{
+            const checked = !!el.checked;
+            // Сохраняем состояние в localStorage
+            try { localStorage.setItem('optCloseConfirm', checked ? '1' : '0'); } catch(e){}
+
+            if (window.Telegram && window.Telegram.WebApp) {
+                if (checked && typeof window.Telegram.WebApp.enableClosingConfirmation === 'function') {
+                    window.Telegram.WebApp.enableClosingConfirmation();
+                } else if (!checked && typeof window.Telegram.WebApp.disableClosingConfirmation === 'function') {
+                    window.Telegram.WebApp.disableClosingConfirmation();
+                }
+            }
+        } catch(e){}
+    };
+
+    // Установим начальное состояние чекбокса: значение из localStorage (по умолчанию true)
+    try{
+        const opt = document.getElementById('optCloseConfirm');
+        if (opt) {
+            const stored = localStorage.getItem('optCloseConfirm');
+            if (stored === null) {
+                opt.checked = true; // default enabled
+                // сохраняем базовое значение
+                try { localStorage.setItem('optCloseConfirm', '1'); } catch(e){}
+            } else {
+                opt.checked = stored === '1';
+            }
+            // Применяем текущее состояние к Telegram WebApp
+            try { window.onCloseConfirmToggle(opt); } catch(e){}
+        }
+    } catch(e){}
+
+    // Попытка показать native Settings Button и подписаться на его события
+    try{
+        if (window.Telegram && window.Telegram.WebApp) {
+            const WebApp = window.Telegram.WebApp;
+            WebApp.ready && WebApp.ready();
+            if (typeof WebApp.showSettingsButton === 'function') {
+                try { WebApp.showSettingsButton(true); } catch(e){}
+            } else if (typeof WebApp.setShowSettingsButton === 'function') {
+                try { WebApp.setShowSettingsButton(true); } catch(e){}
+            }
+
+            const handler = () => { openModal('settingsModal'); };
+            const eventNames = ['settings_button_clicked','settings_button_pressed','settings','settingsButtonClicked'];
+            eventNames.forEach(name => {
+                try { WebApp.onEvent && WebApp.onEvent(name, handler); } catch(e){}
+            });
+        }
+    } catch(e){}
+})();
 
 // ========== НОВЫЙ КОД: UI И ГОРЯЧИЕ КЛАВИШИ ==========
 
@@ -976,23 +1213,34 @@ document.addEventListener('keydown', (e) => {
 
     if (e.key === 'Escape') {
         e.preventDefault();
-        
-        // Проверяем, открыто ли какое-то окно или сайдбар
+
+        // Проверяем набор модалок и сайдбар
         const settingsModal = document.getElementById('settingsModal');
         const mappingModal = document.getElementById('mappingModal');
         const resetConfirmModal = document.getElementById('resetConfirmModal');
         const saveConfirmModal = document.getElementById('saveConfirmModal');
         const hotkeysModal = document.getElementById('hotkeysModal');
         const sidebar = document.getElementById('sidebar');
-        
-        const isMappingOpen = mappingModal.classList.contains('active');
-        const isResetOpen = resetConfirmModal.classList.contains('active');
+        const clearHistoryModal = document.getElementById('clearHistoryConfirmModal');
+        const deleteItemModal = document.getElementById('deleteItemConfirmModal');
+
+        const isMappingOpen = mappingModal && mappingModal.classList.contains('active');
+        const isResetOpen = resetConfirmModal && resetConfirmModal.classList.contains('active');
         const isSaveOpen = saveConfirmModal && saveConfirmModal.classList.contains('active');
-        const isSettingsOpen = settingsModal.classList.contains('active');
-        const isHotkeysOpen = hotkeysModal.classList.contains('active');
-        const isSidebarOpen = sidebar.classList.contains('active');
-        
-        if (isSaveOpen) {
+        const isSettingsOpen = settingsModal && settingsModal.classList.contains('active');
+        const isHotkeysOpen = hotkeysModal && hotkeysModal.classList.contains('active');
+        const isSidebarOpen = sidebar && sidebar.classList.contains('active');
+        const isClearOpen = clearHistoryModal && clearHistoryModal.classList.contains('active');
+        const isDeleteOpen = deleteItemModal && deleteItemModal.classList.contains('active');
+
+        // Приоритетные действия: подтверждения удаления/очистки
+        if (isDeleteOpen) {
+            // Сбросим pending и закроем
+            pendingDeleteIndex = null;
+            closeModal('deleteItemConfirmModal');
+        } else if (isClearOpen) {
+            closeModal('clearHistoryConfirmModal');
+        } else if (isSaveOpen) {
             cancelSaveConfirm();
         } else if (isMappingOpen) {
             backToSettings();
@@ -1002,8 +1250,14 @@ document.addEventListener('keydown', (e) => {
         } else if (isSettingsOpen || isHotkeysOpen || isSidebarOpen) {
             closeAll();
         } else if (isTyping) {
+            // Если пользователь печатает, просто уберём фокус
             e.target.blur();
+        } else {
+            // Если ничего не открыто, закрываем любые overlay/modal, на всякий случай
+            document.querySelectorAll('.modal-overlay.active, .modal.active, .overlay.active').forEach(el => el.classList.remove('active'));
+            pendingDeleteIndex = null;
         }
+
         return;
     }
 
